@@ -1,0 +1,4 @@
+{
+  "plugins": ["meteor","import","react"],
+  "extends": ["eslint:recommended", "plugin:react/recommended", "plugin:meteor/recommended"]
+}
