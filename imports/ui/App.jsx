@@ -12,8 +12,17 @@ import MyToolsContainer from './MyTools';
 import { createNote, NoteCard, NoteIcon } from '../Notes/NoteApp';
 import { createChecklist, ChecklistCard, ChecklistIcon } from '../Checklist/ChecklistApp';
 import { BottomNavigation, BottomNavigationAction } from '@material-ui/core';
+import { withStyles } from '@material-ui/styles';
 
-function HideOnScroll(props) {
+const styles = theme => ({
+  bottomNav: {
+    position: 'fixed',
+    bottom: 0,
+    width: '100vw',
+  },
+});
+
+export const HideOnScroll = (props) => {
   const { children } = props;
   const trigger = useScrollTrigger();
 
@@ -28,10 +37,9 @@ HideOnScroll.propTypes = {
   children: PropTypes.element.isRequired,
 };
 
-export default function App(props) {
+const App = (props) => {
   return (
     <React.Fragment>
-      <CssBaseline />
       <HideOnScroll {...props}>
         <AppBar>
           <Toolbar>
@@ -45,18 +53,23 @@ export default function App(props) {
           <MyToolsContainer />
         </Box>
       </Container>
-      <BottomNavigation
+      <BottomNavigation className={props.classes.bottomNav}
         onChange={(event, newValue) => {
-          switch(newValue) {
-            case 'Note': createNote();break;
-            case 'Checklist': createChecklist();break;
+          switch (newValue) {
+            case 'Note': createNote(); break;
+            case 'Checklist': createChecklist(); break;
           }
         }}
         showLabels
       >
-      <BottomNavigationAction value="Note" label="Notes" icon={<NoteIcon />} />
-      <BottomNavigationAction value="Checklist" label="Checklist" icon={<ChecklistIcon />} />
-    </BottomNavigation>      
+        <BottomNavigationAction value="Note" label="Notes" icon={<NoteIcon />} />
+        <BottomNavigationAction value="Checklist" label="Checklist" icon={<ChecklistIcon />} />
+      </BottomNavigation>
     </React.Fragment>
   );
-}
+};
+App.propTypes = {
+  classes: PropTypes.object.isRequired,
+};
+
+export default withStyles(styles)(App);

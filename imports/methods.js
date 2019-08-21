@@ -6,7 +6,7 @@ import localforage from 'localforage';
 
 Meteor.methods({
     createApp(appData) {
-//        check(appData,Object);
+        check(appData,Object);
         if(Meteor.isClient){
             myToolIds.set(myToolIds.get().concat([appData._id]));
             localforage.setItem('myToolIds',myToolIds.get());

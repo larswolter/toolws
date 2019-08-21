@@ -1,25 +1,28 @@
 import React from 'react';
 import { Router, Route, Switch } from 'react-router';
-import {createBrowserHistory} from 'history';
+import { createBrowserHistory } from 'history';
 
 import { Meteor } from 'meteor/meteor';
 import { Reload } from 'meteor/reload';
 import { render } from 'react-dom';
 import App from '/imports/ui/App'
 import '../imports/methods';
-import { NotesApp } from '../imports/Notes/NoteApp';
+import { NoteApp } from '../imports/Notes/NoteApp';
 import { ChecklistApp } from '../imports/Checklist/ChecklistApp';
+import { SnackbarProvider } from 'notistack';
 
 const browserHistory = createBrowserHistory();
 
 const Routes = () => (
-  <Router history={browserHistory}>
-    <Switch>
-      <Route exact path="/Note/:id" component={NotesApp}/>
-      <Route exact path="/Checklist/:id" component={ChecklistApp}/>
-      <Route component={App}/>
-    </Switch>
-  </Router>
+  <SnackbarProvider maxSnack={2}>
+    <Router history={browserHistory}>
+      <Switch>
+        <Route exact path="/Note/:id" component={NoteApp} />
+        <Route exact path="/Checklist/:id" component={ChecklistApp} />
+        <Route component={App} />
+      </Switch>
+    </Router>
+  </SnackbarProvider>
 );
 
 Meteor.startup(() => {
@@ -40,5 +43,5 @@ Meteor.startup(() => {
         });
       });
   }
-  
+
 });
