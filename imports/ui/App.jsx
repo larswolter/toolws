@@ -49,16 +49,18 @@ const App = (props) => {
       </HideOnScroll>
       <Toolbar />
       <Container maxWidth="md">
-        <Box my={2}>
-          <MyToolsContainer />
-        </Box>
+        <MyToolsContainer />
       </Container>
       <BottomNavigation className={props.classes.bottomNav}
         onChange={(event, newValue) => {
+          let id;
           switch (newValue) {
-            case 'Note': createNote(); break;
-            case 'Checklist': createChecklist(); break;
+            case 'Note':
+              id = createNote(); break;
+            case 'Checklist':
+              id = createChecklist(); break;
           }
+          id && props.history.push(`/${newValue}/${id}`);
         }}
         showLabels
       >

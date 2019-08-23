@@ -16,8 +16,9 @@ import BackIcon from '@material-ui/icons/ArrowBack';
 export { default as NoteIcon } from '@material-ui/icons/Notes';
 
 const useStyles = makeStyles(() => ({
-  paper: {
-    padding: 16
+  editor: {
+    marginTop: '15px',
+    minHeight: '80vh'
   },
 }));
 
@@ -50,16 +51,16 @@ function NoteAppEditor({ tool }) {
       </HideOnScroll>
       <Toolbar />
       <Container maxWidth="md">
-        <Box my={1}>
-          {tool ?
-              <ContentEditable
-                html={html} // innerHTML of the editable div
-                onChange={handleChange} // handle innerHTML change
-              />
-            :
-            <CircularProgress />
-          }
-        </Box>
+        {tool ?
+          <ContentEditable
+            className={classes.editor}
+            html={html} // innerHTML of the editable div
+            onChange={handleChange} // handle innerHTML change
+            innerRef={(ref) => ref && ref.focus()}
+          />
+          :
+          <CircularProgress />
+        }
       </Container>
     </>
   );
@@ -75,6 +76,7 @@ const createNote = () => {
     createdOn: new Date()
   }
   Meteor.call('createApp', app);
+  return app._id
 }
 
 function NotePreview({ tool }) {

@@ -26,17 +26,18 @@ const useStyles = makeStyles(() => ({
 function ChecklistPreview({ tool }) {
   return (
     <>
-      {tool.content && tool.content.slice(0, 3).map(x => <div>{x.text}</div>)}
+      {tool.content && tool.content.slice(0, 3).map((x, idx) => <div key={idx}>{x.text}</div>)}
     </>);
 }
 const createChecklist = () => {
   const app = {
     _id: Random.secret(),
     name: 'Checklist',
-    content: '',
+    content: [{ text: '' }],
     createdOn: new Date()
   }
   Meteor.call('createApp', app);
+  return app._id;
 }
 
 function ChecklistAppEditor({ tool }) {

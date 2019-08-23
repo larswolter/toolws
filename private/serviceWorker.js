@@ -27,11 +27,11 @@ workbox.routing.setCatchHandler(({ event }) => {
     return caches.match('/');
   }
   switch (event.request.destination) {
-  case 'image':
-    return caches.match(workbox.precaching.getCacheKeyForURL(FALLBACK_IMAGE_URL));
-  default:
+    case 'image':
+      return caches.match(workbox.precaching.getCacheKeyForURL(FALLBACK_IMAGE_URL));
+    default:
       // If we don't have a fallback, just return an error response.
-    return Response.error();
+      return Response.error();
   }
 });
 workbox.routing.registerRoute(
@@ -49,14 +49,8 @@ workbox.routing.registerRoute(
 );
 
 workbox.routing.registerRoute(
-  '/chrome-manifest',
+  '/manifest.json',
   new workbox.strategies.StaleWhileRevalidate()
-);
-workbox.routing.registerRoute(
-  /\/dynamicAppIcon/,
-  new workbox.strategies.StaleWhileRevalidate({
-    cacheName: 'images',
-  })
 );
 
 workbox.routing.registerRoute(
