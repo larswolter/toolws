@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import localforage from 'localforage';
 import { withTracker } from 'meteor/react-meteor-data';
 
 import { Meteor } from 'meteor/meteor';
@@ -9,9 +10,10 @@ import { HideOnScroll } from '../ui/App';
 import ContentEditable from 'react-contenteditable'
 import { toolInstances } from '../collections';
 import debounce from 'lodash/debounce';
-import { myTools } from '../ui/MyTools';
+import { myTools } from '../ui/data';
 import { makeStyles } from '@material-ui/styles';
 import BackIcon from '@material-ui/icons/ArrowBack';
+import { withSnackbar } from 'notistack';
 
 export { default as NoteIcon } from '@material-ui/icons/Notes';
 
@@ -22,9 +24,11 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function NoteAppEditor({ tool }) {
+function NoteAppEditor({ tool, match, enqueueSnackbar, history }) {
   const classes = useStyles();
   const [html, setHtml] = useState(tool && tool.content || '');
+  const [innerRef, setRef] = useState();
+
   const handleChange = debounce((evt) => {
     setHtml(evt.target.value);
     toolInstances.update(tool._id, { $set: { content: evt.target.value } });
@@ -41,7 +45,7 @@ function NoteAppEditor({ tool }) {
               edge="start"
               color="inherit"
               aria-label="go back"
-              onClick={() => history.back()}
+              onClick={() => history.push('/')}
             >
               <BackIcon />
             </IconButton>
@@ -56,7 +60,13 @@ function NoteAppEditor({ tool }) {
             className={classes.editor}
             html={html} // innerHTML of the editable div
             onChange={handleChange} // handle innerHTML change
-            innerRef={(ref) => ref && ref.focus()}
+            innerRef={(ref) => {
+              if (!innerRef && ref) {
+                setRef(ref);
+                ref.focus();
+                console.log('focusing');
+              }
+            }}
           />
           :
           <CircularProgress />
@@ -66,11 +76,14 @@ function NoteAppEditor({ tool }) {
   );
 }
 NoteAppEditor.propTypes = {
+  match: PropTypes.object,
+  history: PropTypes.object,
   tool: PropTypes.object,
+  enqueueSnackbar: PropTypes.func,
 }
 const createNote = () => {
   const app = {
-    _id: Random.secret(),
+    _id: Random.id(32),
     name: 'Note',
     content: '',
     createdOn: new Date()
@@ -89,11 +102,12 @@ NotePreview.propTypes = {
   tool: PropTypes.object,
 }
 
-const NoteApp = withTracker(({ match }) => {
+const NoteApp = withSnackbar(withTracker(({ match }) => {
+  console.log('try finding', match.params.id);
   return {
     tool: myTools.findOne(match.params.id),
   };
-})(NoteAppEditor);
+})(NoteAppEditor));
 
 
 export { NotePreview, NoteApp, createNote };

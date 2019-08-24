@@ -8,11 +8,12 @@ import { AppBar, Toolbar, Typography, Container, Box, Paper, CircularProgress, I
 import { HideOnScroll } from '../ui/App';
 import BackIcon from '@material-ui/icons/ArrowBack';
 import { makeStyles } from '@material-ui/styles';
-import { myTools } from '../ui/MyTools';
+import { myTools } from '../ui/data';
 import CheckIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckedIcon from '@material-ui/icons/CheckBoxOutlined';
 import { keys } from '@material-ui/core/styles/createBreakpoints';
 import debounce from 'lodash/debounce';
+import sortBy from 'lodash/sortBy';
 import { toolInstances } from '../collections';
 
 export { default as ChecklistIcon } from '@material-ui/icons/CheckCircleOutline';
@@ -31,7 +32,7 @@ function ChecklistPreview({ tool }) {
 }
 const createChecklist = () => {
   const app = {
-    _id: Random.secret(),
+    _id: Random.id(32),
     name: 'Checklist',
     content: [{ text: '' }],
     createdOn: new Date()
@@ -40,7 +41,9 @@ const createChecklist = () => {
   return app._id;
 }
 
-function ChecklistAppEditor({ tool }) {
+const sorter = (a, b) => !a.checked && b.checked ? -1 : (a.checked && !b.checked ? 1 : 0);
+
+function ChecklistAppEditor({ tool, history }) {
   const [content, setContent] = useState(tool && tool.content || []);
   const classes = useStyles();
   const refs = {};
@@ -56,7 +59,7 @@ function ChecklistAppEditor({ tool }) {
     const newContent = content.map((x, i) => {
       if (idx === i) return { ...x, checked: e };
       return x;
-    });
+    }).sort(sorter);
     setContent(newContent);
     toolInstances.update(tool._id, { $set: { content: newContent } });
   }
@@ -67,12 +70,13 @@ function ChecklistAppEditor({ tool }) {
       if (refs[idx + 1]) {
         refs[idx + 1].focus();
       } else {
-        setContent(content.concat([{ text: '' }]));
+        setContent(content.concat([{ text: '' }]).sort(sorter));
       }
     }
   }
   if ((content.length === 0) && tool) {
-    setContent(tool.content || [{ text: '' }]);
+
+    setContent((tool.content || [{ text: '' }]));
   }
 
   return (
@@ -84,7 +88,7 @@ function ChecklistAppEditor({ tool }) {
               edge="start"
               color="inherit"
               aria-label="go back"
-              onClick={() => history.back()}
+              onClick={() => history.push('/')}
             >
               <BackIcon />
             </IconButton>
@@ -94,12 +98,12 @@ function ChecklistAppEditor({ tool }) {
       </HideOnScroll>
       <Toolbar />
       <Container maxWidth="md">
-        <Box my={1}>
+        <Box>
           {tool ?
             content.map((e, idx) => {
               return (
                 <div key={idx}>
-                  <Grid container spacing={1} alignContent="stretch" alignItems="flex-end">
+                  <Grid container spacing={0} alignContent="stretch" alignItems="flex-end">
                     <Grid item>
                       <Checkbox
                         checked={!!e.checked}
@@ -108,7 +112,7 @@ function ChecklistAppEditor({ tool }) {
                     <Grid item style={{ flexGrow: 1 }}>
                       <InputBase
                         autoFocus={e.text === '' ? true : undefined}
-                        inputRef={(ref) => { refs[idx] = ref }}
+                        inputRef={(ref) => { refs[idx] = !e.checked && ref }}
                         style={{ width: '100%' }}
                         value={e.text}
                         onKeyPress={(evt) => keyPress(evt, idx)}

@@ -10,12 +10,14 @@ import '../imports/methods';
 import { NoteApp } from '../imports/Notes/NoteApp';
 import { ChecklistApp } from '../imports/Checklist/ChecklistApp';
 import { SnackbarProvider } from 'notistack';
+import { onRouteWithId } from '../imports/ui/data';
 
 const browserHistory = createBrowserHistory();
 
 const Routes = () => (
   <SnackbarProvider maxSnack={2}>
     <Router history={browserHistory}>
+      <Route path="/:type/:id" component={onRouteWithId} />
       <Switch>
         <Route exact path="/Note/:id" component={NoteApp} />
         <Route exact path="/Checklist/:id" component={ChecklistApp} />

@@ -1,50 +1,37 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { render } from 'react-dom';
 import { withRouter } from 'react-router';
 
 import { Meteor } from 'meteor/meteor';
-import { ReactiveVar } from 'meteor/reactive-var';
-import { Tracker } from 'meteor/tracker';
 import { withTracker } from 'meteor/react-meteor-data';
 import localforage from 'localforage';
-import { toolInstances } from '../collections';
-import { Ground } from 'meteor/ground:db';
 import DeleteIcon from '@material-ui/icons/Delete';
 import ShareIcon from '@material-ui/icons/Share';
 import moment from 'moment';
 
 import { ChecklistPreview } from '../Checklist/ChecklistApp';
-import { Card, CardContent, CardActions, Button, Typography, makeStyles, CardHeader, IconButton, CardActionArea } from '@material-ui/core';
+import { Card, CardContent, CardActions, Button, CardHeader, IconButton, CardActionArea } from '@material-ui/core';
 import { NotePreview } from '../Notes/NoteApp';
 import { Grid } from '@material-ui/core';
 import { withSnackbar } from 'notistack'
-
-export const myTools = new Ground.Collection('myTools');
-export const myToolIds = new ReactiveVar([]);
-
-const isLoading = new ReactiveVar(true);
-
-localforage.getItem('myToolIds').then((toolIds) => {
-  myToolIds.set(toolIds || []);
-});
-myTools.once('loadend', () => isLoading.set(false));
-
-Tracker.autorun(() => {
-  Meteor.subscribe('myTools', myToolIds.get(), () => {
-    console.log('subscribed tools');
-    myTools.observeSource(toolInstances.find());
-  });
-});
+import { myToolIds, myTools, addItemId } from './data';
 
 
-const MyTools = withSnackbar(withRouter(({ tools, history, enqueueSnackbar }) => {
+const MyTools = withSnackbar(withRouter(({ tools, history, enqueueSnackbar, closeSnackbar }) => {
 
   const deleteTool = (tool) => {
     const reduced = myToolIds.get().filter(t => t !== tool._id);
     myToolIds.set(reduced);
     localforage.setItem('myToolIds', myToolIds.get()).then(() => {
-      enqueueSnackbar('Eintrag gelöscht');
+      const snack = enqueueSnackbar('Eintrag gelöscht', {
+        action:
+          <Button color="secondary" size="small" onClick={() => {
+            addItemId(tool._id);
+            closeSnackbar(snack);
+          }}>
+            Rückgängig
+          </Button>
+      });
     });
   }
 
@@ -68,7 +55,7 @@ const MyTools = withSnackbar(withRouter(({ tools, history, enqueueSnackbar }) =>
 
   return (
     <Grid container spacing={3}>
-      {tools.map(tool =>
+      {tools.length ? tools.map(tool =>
         <Grid item xs={6} sm={4} md={3} lg={2} key={tool._id}>
           <Card>
             <CardActionArea onClick={() => history.push(`/${tool.name}/${tool._id}`)}>
@@ -95,7 +82,9 @@ const MyTools = withSnackbar(withRouter(({ tools, history, enqueueSnackbar }) =>
           </Card>
 
         </Grid>
-      )}
+      ) : <div style={{ color: 'gray', minHeight: '50vh', textAlign: 'center', padding: 20, paddingTop: '20vh' }}>
+          Keine vorhanden, klicke unten um eines zu erstellen
+        </div>}
     </Grid>
   );
 }));
@@ -105,7 +94,7 @@ MyTools.propTypes = {
 }
 const MyToolsContainer = withTracker(() => {
   return {
-    isLoading: isLoading.get(),
+    isLoading: false,
     tools: myTools.find().fetch(),
   };
 })(MyTools);
