@@ -7,6 +7,7 @@ import { withTracker } from 'meteor/react-meteor-data';
 import localforage from 'localforage';
 import DeleteIcon from '@material-ui/icons/Delete';
 import ShareIcon from '@material-ui/icons/Share';
+import NfcIcon from '@material-ui/icons/Nfc';
 import moment from 'moment';
 
 import { ChecklistPreview } from '../Checklist/ChecklistApp';
@@ -15,6 +16,7 @@ import { NotePreview } from '../Notes/NoteApp';
 import { Grid } from '@material-ui/core';
 import { withSnackbar } from 'notistack'
 import { myToolIds, myTools, addItemId } from './data';
+import QRDialog from './qrdialog';
 
 
 const MyTools = withSnackbar(withRouter(({ tools, history, enqueueSnackbar, closeSnackbar }) => {
@@ -40,7 +42,6 @@ const MyTools = withSnackbar(withRouter(({ tools, history, enqueueSnackbar, clos
     if ('share' in navigator) {
       navigator.share({
         title: tool.name,
-        text: tool.content,
         url,
       });
     } else {
@@ -51,41 +52,48 @@ const MyTools = withSnackbar(withRouter(({ tools, history, enqueueSnackbar, clos
       });
     }
   }
+  const [qrcode, setQRCode] = React.useState(false);
 
 
   return (
-    <Grid container spacing={3}>
-      {tools.length ? tools.map(tool =>
-        <Grid item xs={6} sm={4} md={3} lg={2} key={tool._id}>
-          <Card>
-            <CardActionArea onClick={() => history.push(`/${tool.name}/${tool._id}`)}>
-              <CardHeader
-                subheader={moment(tool.createdOn).format('DD.MM.YY HH:mm')}
-              />
-              <CardContent>
-                {(name => {
-                  switch (name) {
-                    case 'Note': return <NotePreview tool={tool} />;
-                    case 'Checklist': return <ChecklistPreview tool={tool} />;
-                  }
-                })(tool.name)}
-              </CardContent>
-            </CardActionArea>
-            <CardActions>
-              <IconButton aria-label="Delete" onClick={() => deleteTool(tool)}>
-                <DeleteIcon />
-              </IconButton>
-              <IconButton aria-label="Share" onClick={() => shareTool(tool)}>
-                <ShareIcon />
-              </IconButton>
-            </CardActions>
-          </Card>
+    <>
+      <QRDialog key="dialog" url={qrcode} open={!!qrcode} handleClose={() => setQRCode(false)} />
+      <Grid container spacing={3}>
+        {tools.length ? tools.map(tool =>
+          <Grid item xs={12} sm={6} md={4} lg={3} key={tool._id}>
+            <Card>
+              <CardActionArea onClick={() => history.push(`/${tool.name}/${tool._id}`)}>
+                <CardHeader
+                  subheader={moment(tool.createdOn).format('DD.MM.YY HH:mm')}
+                />
+                <CardContent>
+                  {(name => {
+                    switch (name) {
+                      case 'Note': return <NotePreview tool={tool} />;
+                      case 'Checklist': return <ChecklistPreview tool={tool} />;
+                    }
+                  })(tool.name)}
+                </CardContent>
+              </CardActionArea>
+              <CardActions>
+                <IconButton aria-label="Delete" onClick={() => deleteTool(tool)}>
+                  <DeleteIcon />
+                </IconButton>
+                <IconButton aria-label="Share" onClick={() => shareTool(tool)}>
+                  <ShareIcon />
+                </IconButton>
+                <IconButton aria-label="Share" onClick={() => setQRCode(tool._id)}>
+                  <NfcIcon />
+                </IconButton>
+              </CardActions>
+            </Card>
 
-        </Grid>
-      ) : <div style={{ color: 'gray', minHeight: '50vh', textAlign: 'center', padding: 20, paddingTop: '20vh' }}>
-          Keine vorhanden, klicke unten um eines zu erstellen
+          </Grid>
+        ) : <div style={{ color: 'gray', minHeight: '50vh', textAlign: 'center', padding: 20, paddingTop: '20vh' }}>
+            Keine vorhanden, klicke unten um eines zu erstellen
         </div>}
-    </Grid>
+      </Grid>
+    </>
   );
 }));
 
