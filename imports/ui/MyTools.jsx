@@ -11,7 +11,7 @@ import NfcIcon from '@material-ui/icons/Nfc';
 import moment from 'moment';
 
 import { ChecklistPreview } from '../Checklist/ChecklistApp';
-import { Card, CardContent, CardActions, Button, CardHeader, IconButton, CardActionArea } from '@material-ui/core';
+import { Card, CardContent, CardActions, Button, CardHeader, IconButton, CardActionArea, MenuItem } from '@material-ui/core';
 import { NotePreview } from '../Notes/NoteApp';
 import { Grid } from '@material-ui/core';
 import { withSnackbar } from 'notistack'
@@ -36,7 +36,11 @@ const MyTools = withSnackbar(withRouter(({ tools, history, enqueueSnackbar, clos
       });
     });
   }
-
+  const [qrcode, setQRCode] = React.useState(false);
+  const shareToolQR = (tool) => {
+    const url = Meteor.absoluteUrl('/' + tool.name + '/' + tool._id);
+    setQRCode(url);
+  }
   const shareTool = (tool) => {
     const url = Meteor.absoluteUrl('/' + tool.name + '/' + tool._id);
     if ('share' in navigator) {
@@ -52,9 +56,20 @@ const MyTools = withSnackbar(withRouter(({ tools, history, enqueueSnackbar, clos
       });
     }
   }
-  const [qrcode, setQRCode] = React.useState(false);
 
+  const menu = (tool) =>
+    <>
+      <MenuItem onClick={() => shareTool(tool)}>
+        Teilen
+    </MenuItem>
+      <MenuItem onClick={() => shareToolQR(tool)}>
+        QRCode
+    </MenuItem>
+      <MenuItem onClick={() => deleteTool(tool)}>
+        Löschen
+    </MenuItem>
 
+    </>
   return (
     <>
       <QRDialog key="dialog" url={qrcode} open={!!qrcode} handleClose={() => setQRCode(false)} />
@@ -69,8 +84,8 @@ const MyTools = withSnackbar(withRouter(({ tools, history, enqueueSnackbar, clos
                 <CardContent>
                   {(name => {
                     switch (name) {
-                      case 'Note': return <NotePreview tool={tool} />;
-                      case 'Checklist': return <ChecklistPreview tool={tool} />;
+                      case 'Note': return <NotePreview tool={tool} menu={menu(tool)} />;
+                      case 'Checklist': return <ChecklistPreview tool={tool} menu={menu(tool)} />;
                     }
                   })(tool.name)}
                 </CardContent>
@@ -82,7 +97,7 @@ const MyTools = withSnackbar(withRouter(({ tools, history, enqueueSnackbar, clos
                 <IconButton aria-label="Share" onClick={() => shareTool(tool)}>
                   <ShareIcon />
                 </IconButton>
-                <IconButton aria-label="Share" onClick={() => setQRCode(tool._id)}>
+                <IconButton aria-label="Share" onClick={() => shareToolQR(tool)}>
                   <NfcIcon />
                 </IconButton>
               </CardActions>

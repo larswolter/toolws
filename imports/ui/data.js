@@ -27,6 +27,7 @@ Tracker.autorun(() => {
 export const addItemId = (id) => {
     const promise = new Promise((resolve, reject) => {
         localforage.getItem('myToolIds').then((toolIds) => {
+            if (!toolIds) toolIds = [];
             if (!toolIds.includes(id)) {
                 toolIds.push(id);
                 myToolIds.set(toolIds);
