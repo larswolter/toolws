@@ -22,7 +22,7 @@ const createChecklist = () => {
   const app = {
     _id: Random.id(32),
     name: 'Checklist',
-    content: [{ text: '' }],
+    content: [{ text: '', entryId: Random.id() }],
     createdOn: new Date()
   }
   Meteor.call('createApp', app);
@@ -128,12 +128,12 @@ function ChecklistAppEditor({ tool, history, menu }) {
               return (
                 <div key={e._id}>
                   <Grid container spacing={0} alignContent="stretch" alignItems="flex-end">
-                    <Grid item>
+                    <Grid item key="checkbox">
                       <Checkbox
                         checked={!!e.checked}
                         onChange={(evt, checked) => check(checked, e._id)} />
                     </Grid>
-                    <Grid item style={{ flexGrow: 1 }}>
+                    <Grid item key="input" style={{ flexGrow: 1 }}>
                       <InputBase
                         inputRef={ref => {
 

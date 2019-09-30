@@ -27,7 +27,7 @@ Meteor.methods({
                 }
             }
         } catch (err) {
-            console.log('failed updating', entryId, text, checked);
+            console.log('failed updating', entryId, text);
         }
     },
     checklistCheck({ _id, entryId, checked }) {
