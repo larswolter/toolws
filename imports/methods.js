@@ -33,14 +33,14 @@ Meteor.methods({
     checklistCheck({ _id, entryId, checked }) {
         const tool = myTools.findOne({ _id, 'content._id': entryId });
         if (tool) {
-            const firstChecked = tool.content.findIndex(x => x.checked === true) || tool.content.length;
-            const content = tool.content.find(x => x._id === entryId);
             toolInstances.update(_id, { $pull: { content: { _id: entryId } } });
+            const firstChecked = tool.content.findIndex(x => x.checked === true);
+            const content = tool.content.find(x => x._id === entryId);
             toolInstances.update(_id, {
                 $push: {
                     content: {
                         $each: [{ ...content, checked }],
-                        $position: firstChecked
+                        $position: firstChecked === -1 ? tool.content.length : firstChecked
                     }
                 }
             });

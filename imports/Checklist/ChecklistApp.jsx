@@ -22,7 +22,7 @@ const createChecklist = () => {
   const app = {
     _id: Random.id(32),
     name: 'Checklist',
-    content: [{ text: '', entryId: Random.id() }],
+    content: [{ text: '', _id: Random.id() }],
     createdOn: new Date()
   }
   Meteor.call('createApp', app);
@@ -59,7 +59,7 @@ function ChecklistAppEditor({ tool, history, menu }) {
       e.preventDefault();
       const entryId = Random.id()
       refs[idx].value = sorted[idx].text.substr(0, e.target.selectionStart);
-      Meteor.call('checklistInsert', { _id: tool._id, entryId, after: idx, text: sorted[idx].text.substr(e.target.selectionStart) });
+      Meteor.call('checklistInsert', { _id: tool._id, entryId, checked: sorted[idx].checked, after: idx, text: sorted[idx].text.substr(e.target.selectionStart) });
       change(refs[idx].value, sorted[idx]._id);
       setNewElement(entryId);
     }
@@ -135,6 +135,7 @@ function ChecklistAppEditor({ tool, history, menu }) {
                     </Grid>
                     <Grid item key="input" style={{ flexGrow: 1 }}>
                       <InputBase
+                        disabled={!!e.checked}
                         inputRef={ref => {
 
                           refs[idx] = ref;
