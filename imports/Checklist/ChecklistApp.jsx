@@ -9,6 +9,7 @@ import { HideOnScroll } from '../ui/App';
 import BackIcon from '@material-ui/icons/ArrowBack';
 import { myTools } from '../ui/data';
 import MenuIcon from '@material-ui/icons/Menu';
+import { withSnackbar } from 'notistack';
 
 export { default as ChecklistIcon } from '@material-ui/icons/CheckCircleOutline';
 
@@ -30,7 +31,7 @@ const createChecklist = () => {
 }
 
 //const sorter = (a, b) => !a.checked && b.checked ? -1 : (a.checked && !b.checked ? 1 : 0);
-function ChecklistAppEditor({ tool, history, menu }) {
+function ChecklistAppEditor({ tool, history, menu, enqueueSnackbar }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [newElement, setNewElement] = useState(null);
   const sorted = tool && tool.content;
@@ -111,8 +112,23 @@ function ChecklistAppEditor({ tool, history, menu }) {
               open={!!anchorEl}
               onClose={handleClose}
             >
-              <MenuItem onClick={() => { }}>
-                Liste leeren
+              <MenuItem onClick={() => {
+                const content = tool.content.map(x => {
+                  return (x.checked ? '[x] ' : '[ ] ') + x.text;
+                }).join('\n');
+                if ('share' in navigator) {
+                  navigator.share({
+                    title: tool.name,
+                    content,
+                  });
+                } else {
+                  navigator.clipboard.writeText(content).then(function () {
+                    enqueueSnackbar('Inhalt in die Zwischenablage kopiert');
+                  });
+                }
+
+              }}>
+                Inhalt teilen
               </MenuItem>
 
               {menu}
@@ -167,13 +183,14 @@ function ChecklistAppEditor({ tool, history, menu }) {
 ChecklistAppEditor.propTypes = {
   tool: PropTypes.object,
   history: PropTypes.object,
+  enqueueSnackbar: PropTypes.object,
   menu: PropTypes.element,
 }
 
 ChecklistPreview.propTypes = {
   tool: PropTypes.object.isRequired,
 }
-const ChecklistApp = withTracker(({ match, ...props }) => {
+const ChecklistApp = withSnackbar(withTracker(({ match, ...props }) => {
   const tool = myTools.findOne(match.params.id);
   if (tool) {
     tool.content = tool.content.map(x => ({ ...x, ref: React.createRef() }));
@@ -182,6 +199,6 @@ const ChecklistApp = withTracker(({ match, ...props }) => {
     tool,
     ...props
   };
-})(ChecklistAppEditor);
+})(ChecklistAppEditor));
 
 export { ChecklistPreview, ChecklistApp, createChecklist };
