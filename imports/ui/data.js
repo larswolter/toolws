@@ -21,8 +21,9 @@ localforage.getItem('myTools').then((tools) => {
     }
 });
 
-const updateForage = debounce(()=> {
-    localforage.setItem('myTools',myTools.find().fetch());
+export const updateForage = debounce(()=> {
+    localforage.setItem('myTools',myTools.find().fetch()).then(()=>{
+    });
 },200);
 
 toolInstances.find().observe({
@@ -31,20 +32,17 @@ toolInstances.find().observe({
         const toolIds = myToolIds.get();
         if(toolIds.includes(tool._id)) {
             myTools.upsert(tool._id,tool);
-            console.log('inserted local data');
             updateForage();
         }
     },
     changed(tool) {
         myTools.update(tool._id,tool);
-        console.log('updated local data');
         updateForage();
     },
     removed(toolId) {
         const toolIds = myToolIds.get();
         if(!toolIds.includes(toolId)) {
             myTools.remove(toolId);
-            console.log('removed local data');
             updateForage();
         }
     }

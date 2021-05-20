@@ -1,32 +1,29 @@
-/* global Assets */
-
 import { Meteor } from 'meteor/meteor';
+import { isModern } from 'meteor/modern-browsers';
 import { WebApp } from 'meteor/webapp';
 
-const swString = {};
-WebApp.connectHandlers.use('/sw.js', (req, response) => {
-  const renderSW = function (arch) {
-    if (Meteor.isDevelopment || !swString[arch]) {
-      const sworker = Assets.getText('serviceWorker.js');
-      const urls = WebApp.clientPrograms[arch].manifest.filter((f) => {
-        return f.url &&
-          (f.cacheable || f.path.match(/\.(?:png|woff2|gif|jpg|jpeg|svg)$/)) &&
-          (f.type !== 'dynamic js') &&
-          (f.path.indexOf('icons/countries') === -1) &&
-          (f.type !== 'json');
-      }).map((f) => {
-        return {
-          revision: f.hash,
-          url: f.url.split('?')[0],
-        };
-      });
+import crypto from 'crypto';
 
-      console.log(`created service worker for ${arch} with ${urls.length} urls`);
-      swString[arch] = sworker.replace('\'FILES_TO_CACHE\'', JSON.stringify(urls, null, 2));
+WebApp.connectHandlers.use('/sw.js', (req, response) => {
+  // set Timeout to ensure that the manifest ist build
+  Meteor.setTimeout(() => {
+    const cr = WebApp.categorizeRequest(req);
+
+    let serviceWorker = Assets.getText('serviceWorker.js');
+    const arch = isModern(cr.browser) ? 'web.browser' : 'web.browser.legacy';
+
+    const clientHash = WebApp.clientPrograms[arch].version;
+    const urls = WebApp.clientPrograms[arch].manifest.filter((f) => (f.type !== 'dynamic js') && (f.type !== 'json')).filter((f) => f.url).map((f) => f.url).map((url) => ({ url, revision: clientHash }));
+    urls.push({ url: '/', revision: clientHash });
+    urls.push({ url: '/chrome-manifest', revision: clientHash });
+    serviceWorker = serviceWorker.replace(/CURRENT_CACHE_NAME/g, clientHash);
+    serviceWorker = serviceWorker.replace('\'FILES_TO_CACHE\'', JSON.stringify(urls, null, 2));
+    if (Meteor.isProduction) {
+      serviceWorker = serviceWorker.replace(', debug: true', '');
     }
-    return swString[arch];
-  };
-  response.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-  response.writeHead(200);
-  response.end(renderSW(req.query.arch || 'web.browser'));
+    response.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    console.debug('service-worker: sending service worker ', clientHash, arch, crypto.createHash('md5').update(serviceWorker).digest('hex'));
+    response.writeHead(200);
+    response.end(serviceWorker);
+  }, 3000);
 });
