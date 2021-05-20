@@ -183,7 +183,7 @@ function ChecklistAppEditor({ tool, history, menu, enqueueSnackbar }) {
 ChecklistAppEditor.propTypes = {
   tool: PropTypes.object,
   history: PropTypes.object,
-  enqueueSnackbar: PropTypes.object,
+  enqueueSnackbar: PropTypes.func,
   menu: PropTypes.element,
 }
 

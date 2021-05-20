@@ -1,27 +1,58 @@
 import { ReactiveVar } from 'meteor/reactive-var';
 import { Tracker } from 'meteor/tracker';
-import { Ground } from 'meteor/ground:db';
 import { toolInstances } from '../collections';
 import localforage from 'localforage';
 import { withSnackbar } from 'notistack'
 import { Promise } from 'meteor/promise';
+import { debounce } from 'lodash';
 
-export const myTools = new Ground.Collection('myTools');
+export const myTools = new Mongo.Collection(null);
 export const myToolIds = new ReactiveVar();
 window._globalState_ = { toolInstances, myTools, myToolIds };
-myTools.observeSource(toolInstances.find());
 
 localforage.getItem('myToolIds').then((toolIds) => {
     if (!myToolIds.get()) {
         myToolIds.set(toolIds || []);
     }
 });
+localforage.getItem('myTools').then((tools) => {
+    if (tools && !myTools.find().count()) {
+        tools.forEach(tool=>myTools.insert(tool));
+    }
+});
+
+const updateForage = debounce(()=> {
+    localforage.setItem('myTools',myTools.find().fetch());
+},200);
+
+toolInstances.find().observe({
+
+    added(tool) {
+        const toolIds = myToolIds.get();
+        if(toolIds.includes(tool._id)) {
+            myTools.upsert(tool._id,tool);
+            console.log('inserted local data');
+            updateForage();
+        }
+    },
+    changed(tool) {
+        myTools.update(tool._id,tool);
+        console.log('updated local data');
+        updateForage();
+    },
+    removed(toolId) {
+        const toolIds = myToolIds.get();
+        if(!toolIds.includes(toolId)) {
+            myTools.remove(toolId);
+            console.log('removed local data');
+            updateForage();
+        }
+    }
+})
 
 Tracker.autorun(() => {
     const toolIds = myToolIds.get();
-    toolIds && Meteor.subscribe('myTools', toolIds, () => {
-        myTools.keep(toolInstances.find());
-    });
+    toolIds && Meteor.subscribe('myTools', toolIds);
 });
 
 export const addItemId = (id) => {
