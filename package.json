@@ -16,7 +16,7 @@
     "localforage": "^1.9.0",
     "lodash": "^4.17.21",
     "meteor-node-stubs": "^1.0.3",
-    "moment": "^2.29.2",
+    "moment": "^2.29.4",
     "notistack": "^0.9.17",
     "qrcode": "^1.4.4",
     "react": "^16.14.0",
