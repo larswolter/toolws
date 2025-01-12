@@ -6,10 +6,10 @@ import crypto from 'crypto';
 
 WebApp.connectHandlers.use('/sw.js', (req, response) => {
   // set Timeout to ensure that the manifest ist build
-  Meteor.setTimeout(() => {
+  Meteor.setTimeout(async () => {
     const cr = WebApp.categorizeRequest(req);
 
-    let serviceWorker = Assets.getText('serviceWorker.js');
+    let serviceWorker = await Assets.getTextAsync('serviceWorker.js');
     const arch = isModern(cr.browser) ? 'web.browser' : 'web.browser.legacy';
 
     const clientHash = WebApp.clientPrograms[arch].version;

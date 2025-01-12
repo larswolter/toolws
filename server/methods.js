@@ -3,12 +3,12 @@ import { check } from "meteor/check";
 import { toolInstances } from "/imports/collections";
 
 Meteor.methods({
-    createApp(appData) {
+    async createApp(appData) {
         check(appData, Object);
-        toolInstances.insert(appData);
+        await toolInstances.insertAsync(appData);
     },
-    checklistInsert({ _id, entryId, text, after }) {
-        toolInstances.update(_id, {
+    async checklistInsert({ _id, entryId, text, after }) {
+        await toolInstances.updateAsync(_id, {
             $push: {
                 content: {
                     $each: [{ text, _id: entryId, checked: false }],
@@ -17,26 +17,26 @@ Meteor.methods({
             }
         });
     },
-    checklistUpdate({ _id, entryId, text }) {
+    async checklistUpdate({ _id, entryId, text }) {
         try {
-            if (toolInstances.findOne({ _id, 'content._id': entryId })) {
+            if (await toolInstances.findOneAsync({ _id, 'content._id': entryId })) {
                 if (text === false)
-                    toolInstances.update(_id, { $pull: { content: { _id: entryId } } });
+                    await toolInstances.updateAsync(_id, { $pull: { content: { _id: entryId } } });
                 else {
-                    toolInstances.update({ _id, 'content._id': entryId }, { $set: { 'content.$.text': text } });
+                    await toolInstances.updateAsync({ _id, 'content._id': entryId }, { $set: { 'content.$.text': text } });
                 }
             }
         } catch (err) {
             console.log('failed updating', entryId, text);
         }
     },
-    checklistCheck({ _id, entryId, checked }) {
-        const tool = toolInstances.findOne({ _id, 'content._id': entryId });
+    async checklistCheck({ _id, entryId, checked }) {
+        const tool = await toolInstances.findOneAsync({ _id, 'content._id': entryId });
         if (tool) {
-            toolInstances.update(_id, { $pull: { content: { _id: entryId } } });
+            await toolInstances.updateAsync(_id, { $pull: { content: { _id: entryId } } });
             const firstChecked = tool.content.findIndex(x => x.checked === true);
             const content = tool.content.find(x => x._id === entryId);
-            toolInstances.update(_id, {
+            await toolInstances.updateAsync(_id, {
                 $push: {
                     content: {
                         $each: [{ ...content, checked }],
