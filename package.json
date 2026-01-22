@@ -14,7 +14,7 @@
     "@material-ui/styles": "^4.11.3",
     "history": "^4.10.1",
     "localforage": "^1.9.0",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "meteor-node-stubs": "^1.0.3",
     "moment": "^2.29.4",
     "notistack": "^1.0.10",
